@@ -1,0 +1,13 @@
+# this is a basic file putting different hosts into categories
+# used by ansible to determine which actions to run on which hosts
+[all]
+192.168.1.200
+192.168.1.201
+192.168.1.202
+192.168.1.203
+[k8s_master]
+192.168.1.200
+[k8s_workers]
+192.168.1.201
+192.168.1.202
+192.168.1.203
