@@ -5,7 +5,8 @@ Script to deploy infrastructure and K8s using Terraform and Ansible in Home Lab
 ## Terraform Instructions
 
 Change the proxmox secret in the script: proxmox-tf main.tf and then apply changes
-
+Change the required local IP addresses for both Master and correponding worker nodes.
+Change the Proxmox vm number
 ## Ansible script:
 
 Verify Ansible can communicate with hosts:
@@ -20,6 +21,12 @@ Installing Kubernetes dependencies with Ansible
 
 ```
 ansible-playbook -i ansible-hosts.txt ansible-install-kubernetes-dependencies.yml
+```
+
+Initialize Master
+
+```
+ansible-playbook -i ansible-hosts.txt ansible-init-cluster.yml
 ```
 
 Get Join command for worker nodes
