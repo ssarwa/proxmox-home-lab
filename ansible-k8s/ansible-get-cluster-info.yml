@@ -1,0 +1,42 @@
+- hosts: k8s_master
+  become: false
+  remote_user: "{{ user }}"
+
+  vars_files:
+    - ansible-vars.yml
+
+  tasks:
+    - name: Extract the join command
+      become: true
+      command: "kubeadm token create --print-join-command"
+      register: join_command
+
+    - name: show join command
+      debug:
+        var: join_command
+
+    - name: Save kubeadm join command for cluster
+      local_action: copy content={{ join_command.stdout_lines | last | trim }} dest={{ join_command_location }} # defaults to your local cwd/join_command.out
+
+    - name: Backup kubeconfig
+      copy:
+        src: /home/ssarwa/.kube/config
+        dest: kubeconfig.yaml
+        remote_src: yes
+
+    - name: Replace cluster user
+      replace:
+        path: kubeconfig.yaml
+        regexp: "kubernetes-admin"
+        replace: "{{ user }}"
+
+    - name: Replace cluster name
+      replace:
+        path: kubeconfig.yaml
+        regexp: "kubernetes"
+        replace: "{{ cluster_name }}"
+
+    - name: Fetch Kubeconfig
+      fetch:
+        src: kubeconfig.yaml
+        dest: config

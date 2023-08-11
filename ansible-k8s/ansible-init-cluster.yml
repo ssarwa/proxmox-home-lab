@@ -1,25 +1,15 @@
 - hosts: k8s_master
   become: true
-  remote_user: ssarwa
+  remote_user: "{{ user }}"
 
   vars_files:
     - ansible-vars.yml
 
   tasks:
-    - name: set docker to use systemd cgroups driver
-      copy:
-        dest: "/etc/docker/daemon.json"
-        content: |
-          {
-            "exec-opts": ["native.cgroupdriver=systemd"]
-          }
-    - name: restart docker
-      service:
-        name: docker
-        state: restarted
 
+      
     - name: Initialize Kubernetes cluster
-      command: "kubeadm init --pod-network-cidr {{ pod_cidr }}"
+      command: "kubeadm init --pod-network-cidr {{ pod_cidr }} --cri-socket unix:///var/run/containerd/containerd.sock"
       args:
         creates: /etc/kubernetes/admin.conf # skip this task if the file already exists
       register: kube_init
@@ -47,11 +37,6 @@
         name: kubelet
         state: restarted
 
-    - name: get calico networking
-      get_url:
-        url: https://projectcalico.docs.tigera.io/v3.18/manifests/calico.yaml
-        dest: "{{ home_dir }}/calico.yaml"
-
     - name: apply calico networking
       become: no
-      command: kubectl apply -f "{{ home_dir }}/calico.yaml"
+      command: kubectl apply -f "https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml"

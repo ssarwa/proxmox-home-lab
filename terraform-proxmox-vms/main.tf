@@ -8,16 +8,15 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url          = "https://192.168.1.2:8006/api2/json"
-  pm_api_token_id     = "tfuser@pam!tf_id"
-  pm_api_token_secret = ""
+  pm_api_url          = var.pm_api_url
+  pm_api_token_id     = var.pm_api_token_id
+  pm_api_token_secret = var.pm_api_token_secret
   pm_tls_insecure     = true
 }
 
 resource "proxmox_vm_qemu" "k8s_master" {
-  count       = 1
-  name        = "k8s-master0${count.index + 1}"
-  vmid        = "900"
+  name        = var.mastername
+  vmid        = "${var.vmid}0"
   target_node = var.proxmox_host
   clone       = var.template_name
 
@@ -52,7 +51,7 @@ resource "proxmox_vm_qemu" "k8s_master" {
     ]
   }
 
-  ipconfig0 = "ip=192.168.1.200/24,gw=192.168.1.1"
+  ipconfig0 = "ip=${var.ip}0/24,gw=${var.gateway}"
 
   sshkeys = <<EOF
   ${var.ssh_key}
@@ -61,8 +60,8 @@ resource "proxmox_vm_qemu" "k8s_master" {
 
 resource "proxmox_vm_qemu" "k8s_worker" {
   count       = 3
-  name        = "k8s-worker0${count.index + 1}"
-  vmid        = "90${count.index + 1}"
+  name        = "${var.workername}${count.index + 1}"
+  vmid        = "${var.vmid}${count.index + 1}"
   target_node = var.proxmox_host
   clone       = var.template_name
 
@@ -98,7 +97,7 @@ resource "proxmox_vm_qemu" "k8s_worker" {
     ]
   }
 
-  ipconfig0 = "ip=192.168.1.20${count.index + 1}/24,gw=192.168.1.1"
+  ipconfig0 = "ip=${var.ip}${count.index + 1}/24,gw=${var.gateway}"
 
   # sshkeys set using variables. the variable contains the text of the key.
   sshkeys = <<EOF
